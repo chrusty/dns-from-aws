@@ -21,7 +21,7 @@ func hostInventoryUpdater() {
 		// Authenticate with AWS:
 		awsAuth, err := aws.GetAuth("", "", "", time.Now())
 		if err != nil {
-			log.Criticalf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s) ...\n", err)
+			log.Errorf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s) ...\n", err)
 			os.Exit(1)
 
 		} else {
@@ -39,7 +39,7 @@ func hostInventoryUpdater() {
 		// Make a "DescribeInstances" call (lists ALL instances in your account):
 		describeInstancesResponse, err := ec2Connection.DescribeInstances([]string{}, filter)
 		if err != nil {
-			log.Criticalf("[hostInventoryUpdater] Failed to make describe-instances call: %v", err)
+			log.Errorf("[hostInventoryUpdater] Failed to make describe-instances call: %v", err)
 
 		} else {
 			log.Debugf("[hostInventoryUpdater] Found %v instances running in your account", len(describeInstancesResponse.Reservations))

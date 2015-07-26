@@ -16,7 +16,8 @@ const (
 	route53domainName                   = "bisn.biz"
 	recordTTL                           = 300
 	awsRegion                           = "eu-west-1"
-	hostInventoryUpdateFrequencySeconds = 15
+	hostInventoryUpdateFrequencySeconds = 60
+	dnsUpdateFrequencySeconds           = 60
 )
 
 var (
@@ -59,6 +60,7 @@ func runUntilKillSignal() {
 
 		case <-sigChan:
 			log.Infof("Bye!")
+			log.Flush()
 			os.Exit(0)
 		}
 

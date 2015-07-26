@@ -5,6 +5,7 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/route53"
+	// "encoding/xml"
 	"os"
 	"time"
 )
@@ -18,8 +19,8 @@ func dnsUpdater() {
 	for {
 
 		// Sleep until the next run:
-		log.Debugf("[dnsUpdater] Sleeping for %vs...", hostInventoryUpdateFrequencySeconds)
-		time.Sleep(time.Duration(hostInventoryUpdateFrequencySeconds) * time.Second)
+		log.Debugf("[dnsUpdater] Sleeping for %vs...", dnsUpdateFrequencySeconds)
+		time.Sleep(time.Duration(dnsUpdateFrequencySeconds) * time.Second)
 
 		// Authenticate with AWS:
 		awsAuth, err := aws.GetAuth("", "", "", time.Now())
@@ -35,7 +36,7 @@ func dnsUpdater() {
 		log.Debugf("[dnsUpdater] Connecting to Route53...")
 		route53Connection, err := route53.NewRoute53(awsAuth)
 		if err != nil {
-			log.Criticalf("[dnsUpdater] Unable to connect to Route53! (%s) ...\n", err)
+			log.Errorf("[dnsUpdater] Unable to connect to Route53! (%s) ...\n", err)
 			os.Exit(1)
 		}
 
@@ -59,6 +60,7 @@ func dnsUpdater() {
 
 				// Prepare a change-request:
 				resourceRecordSet := route53.BasicResourceRecordSet{
+					// resourceRecordSet := route53.Change{
 					Action: "UPSERT",
 					Name:   recordName,
 					Type:   "A",
@@ -71,11 +73,18 @@ func dnsUpdater() {
 			}
 		}
 
-		// Make a "ChangeResourceRecordSet" call to make a new DNS record-set:
-		// changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSet(&route53.ChangeResourceRecordSetsRequest{Changes: changes,}, route53zoneId)
-		_, err = route53Connection.ChangeResourceRecordSet(&route53.ChangeResourceRecordSetsRequest{Changes: changes}, route53zoneId)
+		// Create a request to modify records:
+		changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
+			Xmlns:   "https://route53.amazonaws.com/doc/2013-04-01/",
+			Changes: changes,
+		}
+
+		// Submit the request:
+		changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSet(&changeResourceRecordSetsRequest, route53zoneId)
 		if err != nil {
-			log.Criticalf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
+			log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
+		} else {
+			log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.Id, changeResourceRecordSetsResponse.Status, changeResourceRecordSetsResponse.SubmittedAt)
 		}
 
 		// Unlock:
