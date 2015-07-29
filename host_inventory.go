@@ -81,20 +81,30 @@ func hostInventoryUpdater() {
 					}
 				}
 
-				// Either create or add to the per-role record:
-				roleRecord := fmt.Sprintf("%v.%v", role, awsRegion)
-				if _, ok := hostInventory.Environments[environment].DNSRecords[roleRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[roleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
+				// Either create or add to the per-role records:
+				internalRoleRecord := fmt.Sprintf("%v.%v.i", role, awsRegion)
+				if _, ok := hostInventory.Environments[environment].DNSRecords[internalRoleRecord]; !ok {
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[roleRecord] = append(hostInventory.Environments[environment].DNSRecords[roleRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[internalRoleRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
+				}
+
+				// Also make a per-role record with the public IP address (if we have one):
+				if reservation.Instances[0].IPAddress != "" {
+					externalRoleRecord := fmt.Sprintf("%v.%v.e", role, awsRegion)
+					if _, ok := hostInventory.Environments[environment].DNSRecords[externalRoleRecord]; !ok {
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].IPAddress}}
+					} else {
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[externalRoleRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].IPAddress})
+					}
 				}
 
 				// Either create or add to the role-per-az record:
-				azRecord := fmt.Sprintf("%v.%v", role, reservation.Instances[0].AvailabilityZone)
-				if _, ok := hostInventory.Environments[environment].DNSRecords[azRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[azRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
+				internalAZRecord := fmt.Sprintf("%v.%v.i", role, reservation.Instances[0].AvailabilityZone)
+				if _, ok := hostInventory.Environments[environment].DNSRecords[internalAZRecord]; !ok {
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[azRecord] = append(hostInventory.Environments[environment].DNSRecords[azRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = append(hostInventory.Environments[environment].DNSRecords[internalAZRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
 				}
 
 			}
