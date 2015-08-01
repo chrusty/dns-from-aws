@@ -79,8 +79,8 @@ func dnsUpdater() {
 			// Authenticate with AWS:
 			awsAuth, err := aws.GetAuth("", "", "", time.Now())
 			if err != nil {
-				log.Criticalf("[dnsUpdater] Unable to authenticate to AWS! (%s)", err)
-				os.Exit(1)
+				log.Errorf("[dnsUpdater] Unable to authenticate to AWS! (%s)", err)
+				continue
 
 			} else {
 				log.Debugf("[dnsUpdater] Authenticated to AWS")
@@ -90,8 +90,8 @@ func dnsUpdater() {
 			log.Debugf("[dnsUpdater] Connecting to Route53 ...")
 			route53Connection, err := route53.NewRoute53(awsAuth)
 			if err != nil {
-				log.Criticalf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
-				os.Exit(1)
+				log.Errorf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
+				continue
 			}
 
 			// Make an empty batch of changes:

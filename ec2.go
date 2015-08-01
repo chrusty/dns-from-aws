@@ -6,7 +6,6 @@ import (
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/ec2"
 	"github.com/goamz/goamz/route53"
-	"os"
 	"time"
 )
 
@@ -21,8 +20,13 @@ func hostInventoryUpdater() {
 		// Authenticate with AWS:
 		awsAuth, err := aws.GetAuth("", "", "", time.Now())
 		if err != nil {
-			log.Criticalf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s)", err)
-			os.Exit(1)
+			log.Errorf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s)", err)
+
+			// Sleep until the next run:
+			log.Debugf("[hostInventoryUpdater] Sleeping for %vs ...", *hostupdate)
+			time.Sleep(time.Duration(*hostupdate) * time.Second)
+
+			continue
 
 		} else {
 			log.Debugf("[hostInventoryUpdater] Authenticated to AWS")

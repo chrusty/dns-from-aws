@@ -10,7 +10,7 @@ Populate a DNS zone from the list of EC2 instances in your AWS account
 * One internal round-robin A-record per "role" per environment using private IP addresses:
   * "webserver.us-east-1.i.test.domain.com" => [10.0.1.1, 10.0.2.1, 10.0.3.1]
 * One internal round-robin A-record per "role" per AZ per environment using private IP addresses:
-  * "database.us-east-1a.i.live.domain.com" => [10.0.1.1]
+  * "database.us-east-1a.i.live.domain.com" => [10.2.1.11]
 * One external round-robin A-record per "role" per environment using public IP addresses:
   * "gateway.us-east-1.i.staging.domain.com" => [52.12.234.13, 52.12.234.14, 52.12.234.15]
 
