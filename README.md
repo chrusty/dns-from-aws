@@ -5,9 +5,14 @@ Populate a DNS zone from the list of EC2 instances in your AWS account
 * Periodically interrogates the EC2 API to retrieve the list of running instances
 * Uses instance-tags to determine the "role" and "environment" of each instance
 * Periodically uses this list of instances to populate a DNS zone in Route53
-  * One internal round-robin A-record per "role" per environment using private IP addresses (eg "webserver.us-east-1.i.test.domain.com" => [10.0.1.1, 10.0.2.1, 10.0.3.1])
-  * One internal round-robin A-record per "role" per AZ per environment using private IP addresses (eg "webserver.us-east-1a.i.test.domain.com" => [10.0.1.1])
-  * One external round-robin A-record per "role" per environment using public IP addresses (eg "webserver.us-east-1.i.test.domain.com" => [52.12.234.13, 52.12.234.14, 52.12.234.15])
+
+## DNS Records:
+* One internal round-robin A-record per "role" per environment using private IP addresses:
+  * "webserver.us-east-1.i.test.domain.com" => [10.0.1.1, 10.0.2.1, 10.0.3.1]
+* One internal round-robin A-record per "role" per AZ per environment using private IP addresses:
+  * "database.us-east-1a.i.live.domain.com" => [10.0.1.1]
+* One external round-robin A-record per "role" per environment using public IP addresses:
+  * "gateway.us-east-1.i.staging.domain.com" => [52.12.234.13, 52.12.234.14, 52.12.234.15]
 
 ## Flags:
 * awsregion: The AWS region to connect to ("eu-west-1")
