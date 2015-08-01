@@ -21,7 +21,7 @@ func hostInventoryUpdater() {
 		// Authenticate with AWS:
 		awsAuth, err := aws.GetAuth("", "", "", time.Now())
 		if err != nil {
-			log.Errorf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s) ...\n", err)
+			log.Criticalf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s)", err)
 			os.Exit(1)
 
 		} else {
@@ -29,8 +29,8 @@ func hostInventoryUpdater() {
 		}
 
 		// Make a new EC2 connection:
-		log.Debugf("[hostInventoryUpdater] Connecting to EC2...")
-		ec2Connection := ec2.New(awsAuth, aws.Regions[awsRegion])
+		log.Debugf("[hostInventoryUpdater] Connecting to EC2 ...")
+		ec2Connection := ec2.New(awsAuth, aws.Regions[*awsRegion])
 
 		// Prepare a filter:
 		filter := ec2.NewFilter()
@@ -58,17 +58,17 @@ func hostInventoryUpdater() {
 				// Search for our role and environment tags:
 				var role, environment string
 				for _, tag := range reservation.Instances[0].Tags {
-					if tag.Key == roleTag {
+					if tag.Key == *roleTag {
 						role = tag.Value
 					}
-					if tag.Key == environmentTag {
+					if tag.Key == *environmentTag {
 						environment = tag.Value
 					}
 				}
 
 				// Make sure we have environment and role tags:
 				if environment == "" || role == "" {
-					log.Debugf("Instance (%v) must have both 'environment' and 'role' tags in order for DNS records to be creted...", reservation.Instances[0].InstanceId)
+					log.Debugf("Instance (%v) must have both 'environment' and 'role' tags in order for DNS records to be creted!", reservation.Instances[0].InstanceId)
 
 					// Continue with the next instance:
 					continue
@@ -82,7 +82,7 @@ func hostInventoryUpdater() {
 				}
 
 				// Either create or add to the per-role records:
-				internalRoleRecord := fmt.Sprintf("%v.%v.i", role, awsRegion)
+				internalRoleRecord := fmt.Sprintf("%v.%v.i", role, *awsRegion)
 				if _, ok := hostInventory.Environments[environment].DNSRecords[internalRoleRecord]; !ok {
 					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
 				} else {
@@ -91,7 +91,7 @@ func hostInventoryUpdater() {
 
 				// Also make a per-role record with the public IP address (if we have one):
 				if reservation.Instances[0].IPAddress != "" {
-					externalRoleRecord := fmt.Sprintf("%v.%v.e", role, awsRegion)
+					externalRoleRecord := fmt.Sprintf("%v.%v.e", role, *awsRegion)
 					if _, ok := hostInventory.Environments[environment].DNSRecords[externalRoleRecord]; !ok {
 						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].IPAddress}}
 					} else {
@@ -115,8 +115,8 @@ func hostInventoryUpdater() {
 		}
 
 		// Sleep until the next run:
-		log.Debugf("[hostInventoryUpdater] Sleeping for %vs...", hostInventoryUpdateFrequencySeconds)
-		time.Sleep(time.Duration(hostInventoryUpdateFrequencySeconds) * time.Second)
+		log.Debugf("[hostInventoryUpdater] Sleeping for %vs ...", *hostupdate)
+		time.Sleep(time.Duration(*hostupdate) * time.Second)
 
 	}
 

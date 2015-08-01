@@ -1,41 +1,38 @@
 package main
 
 import (
+	"flag"
 	log "github.com/cihub/seelog"
-	"github.com/goamz/goamz/route53"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 )
 
-const (
-	roleTag                             = "role"
-	environmentTag                      = "environment"
-	route53zoneId                       = "Z39GZVWFWTA4N8"
-	route53domainName                   = "bisn.biz"
-	recordTTL                           = 300
-	awsRegion                           = "eu-west-1"
-	hostInventoryUpdateFrequencySeconds = 60
-	dnsUpdateFrequencySeconds           = 60
-)
-
 var (
+	roleTag            = flag.String("roletag", "role", "EC2 instance tag to derive the 'role' from")
+	environmentTag     = flag.String("environmenttag", "environment", "EC2 instance tag to derive the 'environment' from")
+	recordTTL          = flag.Int("recordttl", 300, "TTL for any DNS records created")
+	awsRegion          = flag.String("awsregion", "eu-west-1", "The AWS region to connect to")
+	hostupdate         = flag.Int("hostupdate", 60, "How many seconds to sleep between updating the list of hosts from EC2")
+	dnsupdate          = flag.Int("dnsupdate", 60, "How many seconds to sleep between updating DNS records from the host-list")
+	route53domainName  = flag.String("domainname", "domain.com,", "The Route53 DNS zone to use (including trailing '.')")
 	hostInventoryMutex sync.Mutex
 	hostInventory      HostInventoryDNSRecords
+	route53zoneId      string
 )
 
-type HostInventoryDNSRecords struct {
-	Environments map[string]Environment
-}
-
-type Environment struct {
-	DNSRecords map[string][]route53.ResourceRecordValue
+func init() {
+	// Parse the command-line arguments:
+	flag.Parse()
 }
 
 func main() {
 	// Make sure we flush the log before quitting:
 	defer log.Flush()
+
+	// Lookup the Route53 zone-id:
+	route53zoneId = getRoute53ZoneId(*route53domainName)
 
 	// Update the host-inventory:
 	go hostInventoryUpdater()
