@@ -94,13 +94,13 @@ func dnsUpdater() {
 				continue
 			}
 
-			// Make an empty batch of changes:
-			changes := make([]route53.ResourceRecordSet, 0)
-
 			// Go through each environment:
 			for environmentName, environment := range hostInventory.Environments {
 
 				log.Debugf("[dnsUpdater] Creating requests for the '%v' environment ...", environmentName)
+
+				// Make an empty batch of changes:
+				changes := make([]route53.ResourceRecordSet, 0)
 
 				// Now iterate over the host-inventory:
 				for dnsRecordName, dnsRecordValue := range environment.DNSRecords {
@@ -121,20 +121,21 @@ func dnsUpdater() {
 					// Add it to our list of changes:
 					changes = append(changes, resourceRecordSet)
 				}
-			}
 
-			// Create a request to modify records:
-			changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
-				Xmlns:   "https://route53.amazonaws.com/doc/2013-04-01/",
-				Changes: changes,
-			}
+				// Create a request to modify records:
+				changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
+					Xmlns:   "https://route53.amazonaws.com/doc/2013-04-01/",
+					Changes: changes,
+				}
 
-			// Submit the request:
-			changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSet(&changeResourceRecordSetsRequest, route53zoneId)
-			if err != nil {
-				log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
-			} else {
-				log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.Id, changeResourceRecordSetsResponse.Status, changeResourceRecordSetsResponse.SubmittedAt)
+				// Submit the request:
+				changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSet(&changeResourceRecordSetsRequest, route53zoneId)
+				if err != nil {
+					log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
+				} else {
+					log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets for %v.%v (Request-ID: %v, Status: %v, Submitted: %v)", len(changes), environmentName, route53domainName, changeResourceRecordSetsResponse.Id, changeResourceRecordSetsResponse.Status, changeResourceRecordSetsResponse.SubmittedAt)
+				}
+
 			}
 
 		} else {
