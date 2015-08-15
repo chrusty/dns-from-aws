@@ -17,7 +17,7 @@ func hostInventoryUpdater() {
 	for {
 
 		// Authenticate with AWS:
-		awsAuth, err := aws.GetAuth("", "", "", time.Now())
+		awsAuth, err := aws.GetAuth("", "")
 		if err != nil {
 			log.Errorf("[hostInventoryUpdater] Unable to authenticate to AWS! (%s)", err)
 
@@ -87,27 +87,27 @@ func hostInventoryUpdater() {
 				// Either create or add to the per-role records:
 				internalRoleRecord := fmt.Sprintf("%v.%v.i", role, *awsRegion)
 				if _, ok := hostInventory.Environments[environment].DNSRecords[internalRoleRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []string{reservation.Instances[0].PrivateIPAddress}
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []string{reservation.Instances[0].PrivateIpAddress}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[internalRoleRecord], reservation.Instances[0].PrivateIPAddress)
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[internalRoleRecord], reservation.Instances[0].PrivateIpAddress)
 				}
 
 				// Also make a per-role record with the public IP address (if we have one):
-				if reservation.Instances[0].IPAddress != "" {
+				if reservation.Instances[0].PublicIpAddress != "" {
 					externalRoleRecord := fmt.Sprintf("%v.%v.e", role, *awsRegion)
 					if _, ok := hostInventory.Environments[environment].DNSRecords[externalRoleRecord]; !ok {
-						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []string{reservation.Instances[0].IPAddress}
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []string{reservation.Instances[0].PublicIpAddress}
 					} else {
-						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[externalRoleRecord], reservation.Instances[0].IPAddress)
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[externalRoleRecord], reservation.Instances[0].PublicIpAddress)
 					}
 				}
 
 				// Either create or add to the role-per-az record:
-				internalAZRecord := fmt.Sprintf("%v.%v.i", role, reservation.Instances[0].AvailabilityZone)
+				internalAZRecord := fmt.Sprintf("%v.%v.i", role, reservation.Instances[0].AvailZone)
 				if _, ok := hostInventory.Environments[environment].DNSRecords[internalAZRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = []string{reservation.Instances[0].PrivateIPAddress}
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = []string{reservation.Instances[0].PrivateIpAddress}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = append(hostInventory.Environments[environment].DNSRecords[internalAZRecord], reservation.Instances[0].PrivateIPAddress)
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = append(hostInventory.Environments[environment].DNSRecords[internalAZRecord], reservation.Instances[0].PrivateIpAddress)
 				}
 
 			}

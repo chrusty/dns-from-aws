@@ -25,11 +25,11 @@ func getRoute53ZoneId(domainName string) string {
 
 	// Make a new EC2 connection:
 	log.Debugf("[dnsUpdater] Connecting to Route53 ...")
-	route53Connection, err := route53.NewRoute53(awsAuth)
-	if err != nil {
-		log.Criticalf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
-		os.Exit(1)
-	}
+	route53Connection := route53.New(awsAuth, aws.Regions[*awsRegion])
+	// if err != nil {
+	// 	log.Criticalf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
+	// 	os.Exit(1)
+	// }
 
 	// Submit the request:
 	ListHostedZonesResponse, err := route53Connection.ListHostedZones("", 100)
@@ -44,10 +44,10 @@ func getRoute53ZoneId(domainName string) string {
 	for _, hostedZone := range ListHostedZonesResponse.HostedZones {
 		// Compare the name to the one provided:
 		if hostedZone.Name == domainName {
-			log.Infof("[dnsUpdater] Found ID (%v) for domain (%v).", hostedZone.Id, domainName)
+			log.Infof("[dnsUpdater] Found ID (%v) for domain (%v).", hostedZone.ID, domainName)
 
 			// Split the zone-ID (because they tend to look like "/hostedzone/ZXJHAS123"):
-			return strings.Split(hostedZone.Id, "/")[2]
+			return strings.Split(hostedZone.ID, "/")[2]
 			break
 		}
 	}
@@ -88,14 +88,14 @@ func dnsUpdater() {
 
 			// Make a new EC2 connection:
 			log.Debugf("[dnsUpdater] Connecting to Route53 ...")
-			route53Connection, err := route53.NewRoute53(awsAuth)
-			if err != nil {
-				log.Errorf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
-				continue
-			}
+			route53Connection := route53.New(awsAuth, aws.Regions[*awsRegion])
+			// if err != nil {
+			// 	log.Errorf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
+			// 	continue
+			// }
 
 			// Make an empty batch of changes:
-			changes := make([]route53.ResourceRecordSet, 0)
+			changes := make([]route53.Change, 0)
 
 			// Go through each environment:
 			for environmentName, environment := range hostInventory.Environments {
@@ -110,13 +110,14 @@ func dnsUpdater() {
 					log.Debugf("[dnsUpdater] '%v' => '%v'", recordName, dnsRecordValue)
 
 					// Prepare a change-request:
-					// resourceRecordSet := route53.ResourceRecordSet{
-					resourceRecordSet := route53.BasicResourceRecordSet{
+					resourceRecordSet := route53.Change{
 						Action: "UPSERT",
-						Name:   recordName,
-						Type:   "A",
-						TTL:    *recordTTL,
-						Values: dnsRecordValue,
+						Record: route53.ResourceRecordSet{
+							Name:    recordName,
+							Type:    "A",
+							TTL:     *recordTTL,
+							Records: dnsRecordValue,
+						},
 					}
 
 					// Add it to our list of changes:
@@ -130,11 +131,11 @@ func dnsUpdater() {
 			}
 
 			// Submit the request:
-			changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSet(&changeResourceRecordSetsRequest, route53zoneId)
+			changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSets(route53zoneId, &changeResourceRecordSetsRequest)
 			if err != nil {
 				log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
 			} else {
-				log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.Id, changeResourceRecordSetsResponse.Status, changeResourceRecordSetsResponse.SubmittedAt)
+				log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.ChangeInfo.ID, changeResourceRecordSetsResponse.ChangeInfo.Status, changeResourceRecordSetsResponse.ChangeInfo.SubmittedAt)
 			}
 
 		} else {
