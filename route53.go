@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	log "github.com/cihub/seelog"
-	"github.com/goamz/goamz/aws"
-	"github.com/goamz/goamz/route53"
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/route53"
 	"os"
 	"strings"
 	"time"
@@ -14,7 +14,7 @@ import (
 func getRoute53ZoneId(domainName string) string {
 
 	// Authenticate with AWS:
-	awsAuth, err := aws.GetAuth("", "", "", time.Now())
+	awsAuth, err := aws.GetAuth("", "")
 	if err != nil {
 		log.Criticalf("[dnsUpdater] Unable to authenticate to AWS! (%s)", err)
 		os.Exit(1)
@@ -77,7 +77,7 @@ func dnsUpdater() {
 		if len(hostInventory.Environments) > 0 {
 
 			// Authenticate with AWS:
-			awsAuth, err := aws.GetAuth("", "", "", time.Now())
+			awsAuth, err := aws.GetAuth("", "")
 			if err != nil {
 				log.Errorf("[dnsUpdater] Unable to authenticate to AWS! (%s)", err)
 				continue
@@ -110,6 +110,7 @@ func dnsUpdater() {
 					log.Debugf("[dnsUpdater] '%v' => '%v'", recordName, dnsRecordValue)
 
 					// Prepare a change-request:
+					// resourceRecordSet := route53.ResourceRecordSet{
 					resourceRecordSet := route53.BasicResourceRecordSet{
 						Action: "UPSERT",
 						Name:   recordName,
@@ -125,7 +126,6 @@ func dnsUpdater() {
 
 			// Create a request to modify records:
 			changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
-				Xmlns:   "https://route53.amazonaws.com/doc/2013-04-01/",
 				Changes: changes,
 			}
 

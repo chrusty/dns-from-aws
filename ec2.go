@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 	log "github.com/cihub/seelog"
-	"github.com/goamz/goamz/aws"
-	"github.com/goamz/goamz/ec2"
-	"github.com/goamz/goamz/route53"
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/ec2"
 	"time"
 )
 
@@ -41,7 +40,7 @@ func hostInventoryUpdater() {
 		filter.Add("instance-state-name", "running")
 
 		// Make a "DescribeInstances" call (lists ALL instances in your account):
-		describeInstancesResponse, err := ec2Connection.DescribeInstances([]string{}, filter)
+		describeInstancesResponse, err := ec2Connection.Instances([]string{}, filter)
 		if err != nil {
 			log.Errorf("[hostInventoryUpdater] Failed to make describe-instances call: %v", err)
 
@@ -81,34 +80,34 @@ func hostInventoryUpdater() {
 				// Either create or add to the environment record:
 				if _, ok := hostInventory.Environments[environment]; !ok {
 					hostInventory.Environments[environment] = Environment{
-						DNSRecords: make(map[string][]route53.ResourceRecordValue),
+						DNSRecords: make(map[string][]string),
 					}
 				}
 
 				// Either create or add to the per-role records:
 				internalRoleRecord := fmt.Sprintf("%v.%v.i", role, *awsRegion)
 				if _, ok := hostInventory.Environments[environment].DNSRecords[internalRoleRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = []string{reservation.Instances[0].PrivateIPAddress}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[internalRoleRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
+					hostInventory.Environments[environment].DNSRecords[internalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[internalRoleRecord], reservation.Instances[0].PrivateIPAddress)
 				}
 
 				// Also make a per-role record with the public IP address (if we have one):
 				if reservation.Instances[0].IPAddress != "" {
 					externalRoleRecord := fmt.Sprintf("%v.%v.e", role, *awsRegion)
 					if _, ok := hostInventory.Environments[environment].DNSRecords[externalRoleRecord]; !ok {
-						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].IPAddress}}
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = []string{reservation.Instances[0].IPAddress}
 					} else {
-						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[externalRoleRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].IPAddress})
+						hostInventory.Environments[environment].DNSRecords[externalRoleRecord] = append(hostInventory.Environments[environment].DNSRecords[externalRoleRecord], reservation.Instances[0].IPAddress)
 					}
 				}
 
 				// Either create or add to the role-per-az record:
 				internalAZRecord := fmt.Sprintf("%v.%v.i", role, reservation.Instances[0].AvailabilityZone)
 				if _, ok := hostInventory.Environments[environment].DNSRecords[internalAZRecord]; !ok {
-					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = []route53.ResourceRecordValue{{Value: reservation.Instances[0].PrivateIPAddress}}
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = []string{reservation.Instances[0].PrivateIPAddress}
 				} else {
-					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = append(hostInventory.Environments[environment].DNSRecords[internalAZRecord], route53.ResourceRecordValue{Value: reservation.Instances[0].PrivateIPAddress})
+					hostInventory.Environments[environment].DNSRecords[internalAZRecord] = append(hostInventory.Environments[environment].DNSRecords[internalAZRecord], reservation.Instances[0].PrivateIPAddress)
 				}
 
 			}
