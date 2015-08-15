@@ -6,7 +6,6 @@ import (
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/route53"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -42,7 +41,7 @@ func getRoute53ZoneId(domainName string) string {
 			log.Infof("[dnsUpdater] Found ID (%v) for domain (%v).", hostedZone.ID, domainName)
 
 			// Split the zone-ID (because they tend to look like "/hostedzone/ZXJHAS123"):
-			return strings.Split(hostedZone.ID, "/")[2]
+			return route53.CleanZoneID(hostedZone.ID)
 			break
 		}
 	}
@@ -85,13 +84,13 @@ func dnsUpdater() {
 			log.Debugf("[dnsUpdater] Connecting to Route53 ...")
 			route53Connection := route53.New(awsAuth, aws.Regions[*awsRegion])
 
-			// Make an empty batch of changes:
-			changes := make([]route53.Change, 0)
-
 			// Go through each environment:
 			for environmentName, environment := range hostInventory.Environments {
 
 				log.Debugf("[dnsUpdater] Creating requests for the '%v' environment ...", environmentName)
+
+				// Make an empty batch of changes:
+				changes := make([]route53.Change, 0)
 
 				// Now iterate over the host-inventory:
 				for dnsRecordName, dnsRecordValue := range environment.DNSRecords {
@@ -114,19 +113,20 @@ func dnsUpdater() {
 					// Add it to our list of changes:
 					changes = append(changes, resourceRecordSet)
 				}
-			}
 
-			// Create a request to modify records:
-			changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
-				Changes: changes,
-			}
+				// Create a request to modify records:
+				changeResourceRecordSetsRequest := route53.ChangeResourceRecordSetsRequest{
+					Changes: changes,
+				}
 
-			// Submit the request:
-			changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSets(route53zoneId, &changeResourceRecordSetsRequest)
-			if err != nil {
-				log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
-			} else {
-				log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.ChangeInfo.ID, changeResourceRecordSetsResponse.ChangeInfo.Status, changeResourceRecordSetsResponse.ChangeInfo.SubmittedAt)
+				// Submit the request:
+				changeResourceRecordSetsResponse, err := route53Connection.ChangeResourceRecordSets(route53zoneId, &changeResourceRecordSetsRequest)
+				if err != nil {
+					log.Errorf("[dnsUpdater] Failed to make changeResourceRecordSetsResponse call: %v", err)
+				} else {
+					log.Infof("[dnsUpdater] Successfully updated %d DNS record-sets. Request-ID: %v, Status: %v, Submitted: %v", len(changes), changeResourceRecordSetsResponse.ChangeInfo.ID, changeResourceRecordSetsResponse.ChangeInfo.Status, changeResourceRecordSetsResponse.ChangeInfo.SubmittedAt)
+				}
+
 			}
 
 		} else {
