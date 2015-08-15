@@ -18,7 +18,6 @@ func getRoute53ZoneId(domainName string) string {
 	if err != nil {
 		log.Criticalf("[dnsUpdater] Unable to authenticate to AWS! (%s)", err)
 		os.Exit(1)
-
 	} else {
 		log.Debugf("[dnsUpdater] Authenticated to AWS")
 	}
@@ -26,10 +25,6 @@ func getRoute53ZoneId(domainName string) string {
 	// Make a new EC2 connection:
 	log.Debugf("[dnsUpdater] Connecting to Route53 ...")
 	route53Connection := route53.New(awsAuth, aws.Regions[*awsRegion])
-	// if err != nil {
-	// 	log.Criticalf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
-	// 	os.Exit(1)
-	// }
 
 	// Submit the request:
 	ListHostedZonesResponse, err := route53Connection.ListHostedZones("", 100)
@@ -89,10 +84,6 @@ func dnsUpdater() {
 			// Make a new EC2 connection:
 			log.Debugf("[dnsUpdater] Connecting to Route53 ...")
 			route53Connection := route53.New(awsAuth, aws.Regions[*awsRegion])
-			// if err != nil {
-			// 	log.Errorf("[dnsUpdater] Unable to connect to Route53! (%s)", err)
-			// 	continue
-			// }
 
 			// Make an empty batch of changes:
 			changes := make([]route53.Change, 0)
