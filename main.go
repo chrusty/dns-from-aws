@@ -9,7 +9,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
-	dns "github.com/chrusty/dns-from-aws/dns"
+	// dns "github.com/chrusty/dns-from-aws/dns"
 	hostinventory "github.com/chrusty/dns-from-aws/hostinventory"
 	types "github.com/chrusty/dns-from-aws/types"
 )
@@ -54,7 +54,7 @@ func main() {
 	go hostinventory.Updater(&config)
 
 	// Run the dns-updater:
-	go dns.Updater(&config)
+	// go dns.Updater(&config)
 
 	// Run until we get a kill-signal:
 	runUntilKillSignal()

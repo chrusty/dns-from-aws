@@ -14,13 +14,13 @@ type Environment struct {
 
 // Configuration object for the HostInventoryUpdater:
 type Config struct {
-	HostUpdateFrequency    int
-	DNSUpdateFrequency     int
-	RoleMetadataKey        string
-	EnvironmentMetadataKey string
-	DNSDomainName          string
-	DNSZoneName            string
-	DNSTTL                 int64
-	HostInventory          HostInventory
-	HostInventoryMutex     sync.Mutex
+	HostUpdateFrequency int
+	DNSUpdateFrequency  int
+	RoleTag             string
+	EnvironmentTag      string
+	DNSDomainName       string
+	AWSRegion           string
+	DNSTTL              int64
+	HostInventory       HostInventory
+	HostInventoryMutex  sync.Mutex
 }
