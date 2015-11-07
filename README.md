@@ -15,6 +15,7 @@ Populate a DNS zone from the list of EC2 instances in your AWS account
   * "gateway.us-east-1.i.staging.domain.com" => [52.12.234.13, 52.12.234.14, 52.12.234.15]
 
 ## Flags:
+```
 Usage of ./dns-from-aws:
   -awsregion="eu-west-1": The AWS region to connect to
   -dnsttl=300: TTL for any DNS records created
@@ -23,6 +24,7 @@ Usage of ./dns-from-aws:
   -environmenttag="environment": Instance tag to derive the 'environment' from
   -hostupdate=60: How many seconds to sleep between updating the list of hosts from AWS
   -roletag="role": Instance tag to derive the 'role' from
+```
 
 ## AWS Credentials:
 Credentials can either be derived from IAM & Instance-profiles, or from exported key-pairs:
