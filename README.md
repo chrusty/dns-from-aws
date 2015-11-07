@@ -15,17 +15,18 @@ Populate a DNS zone from the list of EC2 instances in your AWS account
   * "gateway.us-east-1.i.staging.domain.com" => [52.12.234.13, 52.12.234.14, 52.12.234.15]
 
 ## Flags:
-* awsregion: The AWS region to connect to ("eu-west-1")
-* dnsupdate: How many seconds to sleep between updating DNS records from the host-list (60)
-* domainname: The Route53 DNS zone to use, including trailing '.' ("domain.com.")
-* environmenttag: EC2 instance tag to derive the 'environment' from ("environment")
-* hostupdate: How many seconds to sleep between updating the list of hosts from EC2 (60)
-* recordttl: TTL for any DNS records created (300)
-* roletag: EC2 instance tag to derive the 'role' from ("role")
+Usage of ./dns-from-aws:
+  -awsregion="eu-west-1": The AWS region to connect to
+  -dnsttl=300: TTL for any DNS records created
+  -dnsupdate=60: How many seconds to sleep between updating DNS records from the host-list
+  -domainname="domain.com.": The DNS domain to use (including trailing '.')
+  -environmenttag="environment": Instance tag to derive the 'environment' from
+  -hostupdate=60: How many seconds to sleep between updating the list of hosts from AWS
+  -roletag="role": Instance tag to derive the 'role' from
 
 ## AWS Credentials:
 Credentials can either be derived from IAM & Instance-profiles, or from exported key-pairs:
 ```
-export AWS_ACCESS_KEY='AKAJHSGDJHASGDJHGASJH'
-export AWS_SECRET_KEY='jasdjAJSHJDH9189287321kjskjdhkasjhdkajhsda'
+export AWS_ACCESS_KEY='AAAAAAAAAAAAAAAAAAAAAAA'
+export AWS_SECRET_KEY='wrlwrlwrlwrlwrlwrwlrwlrllwrlwrwl'
 ```
