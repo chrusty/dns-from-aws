@@ -20,7 +20,7 @@ type Config struct {
 	EnvironmentTag      string
 	DNSDomainName       string
 	AWSRegion           string
-	DNSTTL              int64
+	DNSTTL              int
 	HostInventory       HostInventory
 	HostInventoryMutex  sync.Mutex
 }

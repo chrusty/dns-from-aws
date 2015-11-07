@@ -9,7 +9,7 @@ import (
 
 	log "github.com/cihub/seelog"
 
-	// dns "github.com/chrusty/dns-from-aws/dns"
+	dns "github.com/chrusty/dns-from-aws/dns"
 	hostinventory "github.com/chrusty/dns-from-aws/hostinventory"
 	types "github.com/chrusty/dns-from-aws/types"
 )
@@ -17,7 +17,7 @@ import (
 var (
 	roleTag        = flag.String("roletag", "role", "Instance tag to derive the 'role' from")
 	environmentTag = flag.String("environmenttag", "environment", "Instance tag to derive the 'environment' from")
-	dnsTTL         = flag.Int64("dnsttl", 300, "TTL for any DNS records created")
+	dnsTTL         = flag.Int("dnsttl", 300, "TTL for any DNS records created")
 	hostUpdateFreq = flag.Int("hostupdate", 60, "How many seconds to sleep between updating the list of hosts from AWS")
 	dnsUpdateFreq  = flag.Int("dnsupdate", 60, "How many seconds to sleep between updating DNS records from the host-list")
 	dnsDomainName  = flag.String("domainname", "domain.com.", "The DNS domain to use (including trailing '.')")
@@ -54,7 +54,7 @@ func main() {
 	go hostinventory.Updater(&config)
 
 	// Run the dns-updater:
-	// go dns.Updater(&config)
+	go dns.Updater(&config)
 
 	// Run until we get a kill-signal:
 	runUntilKillSignal()
